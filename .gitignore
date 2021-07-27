@@ -1,0 +1,5 @@
+# Node / NPM
+./*/node_modules/*
+./*/__mocks__/*
+./*/app/*
+./*/assets/*
