@@ -8,6 +8,10 @@ jobs:
       - checkout
       - restore_cache:
           keys: [frontend-build]
+      - run: 
+          name: Install dependencies
+          working_directory: ./frontend
+          command: npm i
       - run:
           name: Build front-end
           command: npm run build
@@ -23,6 +27,10 @@ jobs:
       - checkout
       - restore_cache:
           keys: [backend-build]
+      - run: 
+          name: Install dependencies
+          working_directory: ./backend
+          command: npm i
       - run:
           name: Back-end build
           command: npm run build
