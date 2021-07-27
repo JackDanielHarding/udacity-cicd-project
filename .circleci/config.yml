@@ -10,6 +10,10 @@ jobs:
           name: Install dependencies
           working_directory: ./frontend
           command: npm i
+      - run: 
+          name: Build frontend
+          working_directory: ./frontend
+          command: npm run build
           
   build_backend:
     working_directory:
@@ -21,6 +25,10 @@ jobs:
           name: Install dependencies
           working_directory: ./backend
           command: npm i
+      - run: 
+          name: Build backend
+          working_directory: ./backend
+          command: npm run build
 
 workflows:
   build:
