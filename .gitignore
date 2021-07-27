@@ -1,0 +1,7 @@
+# Node / NPM
+frontend/node_modules/*
+frontend/__mocks__/*
+frontend/app/*
+frontend/assets/*
+
+backend/node_modules/*

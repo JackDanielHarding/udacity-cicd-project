@@ -1,45 +1,102 @@
 version: 2.1
-
+            
 jobs:
-  build_frontend:
+  build-frontend:
     docker:
-      - image: circleci/node:latest
+      - image: circleci/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [frontend-build]
       - run: 
           name: Install dependencies
           working_directory: ./frontend
           command: npm i
-      - run: 
-          name: Build frontend
-          working_directory: ./frontend
+      - run:
+          name: Build front-end
           command: npm run build
+          working_directory: ./frontend
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
+
+  build-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run: 
+          name: Install dependencies
+          working_directory: ./backend
+          command: npm i
+      - run:
+          name: Back-end build
+          command: npm run build
+          working_directory: ./backend
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+
+  test-frontend:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
       - run: 
           name: Run frontend tests
           working_directory: ./frontend
           command: npm run test
-          
-  build_backend:
-    working_directory:
+                
+  test-backend:
     docker:
       - image: circleci/node:latest
     steps:
       - checkout
-      - run: 
-          name: Install dependencies
-          working_directory: ./backend
-          command: npm i
-      - run: 
-          name: Build backend
-          working_directory: ./backend
-          command: npm run build
+      - restore_cache:
+          keys: [backend-build]
       - run: 
           name: Run backend tests
           working_directory: ./backend
           command: npm run test
+            
+  scan-frontend:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run: 
+          name: Analyse frontend
+          working_directory: ./frontend
+          command: npm audit --audit-level=critical
+
+  scan-backend:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run: 
+          name: Analyse backend
+          working_directory: ./backend
+          command: npm audit --audit-level=critical
 
 workflows:
-  build:
+  default:
     jobs:
-      - build_frontend
-      - build_backend
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]

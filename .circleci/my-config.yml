@@ -1,0 +1,59 @@
+version: 2.1
+
+jobs:
+  build_frontend:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - run: 
+          name: Install dependencies
+          working_directory: ./frontend
+          command: npm i
+      - run: 
+          name: Build frontend
+          working_directory: ./frontend
+          command: npm run build
+      - run: 
+          name: Run frontend tests
+          working_directory: ./frontend
+          command: npm run test
+      - run: 
+          name: Analyse frontend
+          working_directory: ./frontend
+          command: npm audit --audit-level=critical
+
+    test_frontend:
+      docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - run: 
+          name: Install dependencies
+          working_directory: ./frontend
+          command: npm i
+          
+  build_backend:
+    working_directory:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - checkout
+      - run: 
+          name: Install dependencies
+          working_directory: ./backend
+          command: npm i
+      - run: 
+          name: Build backend
+          working_directory: ./backend
+          command: npm run build
+      - run: 
+          name: Run backend tests
+          working_directory: ./backend
+          command: npm run test
+
+workflows:
+  build:
+    jobs:
+      - build_frontend
+      - build_backend
