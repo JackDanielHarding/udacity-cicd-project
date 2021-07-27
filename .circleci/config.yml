@@ -85,7 +85,7 @@ jobs:
       - run: 
           name: Analyse backend
           working_directory: ./backend
-          command: npm audit --audit-level=critical
+          command: npm audit # I had to remove the --audit-level=critical flag because when running the npm audit fix --audit-level=critical --force from the instructions, it introduces a breaking change to one of the dependencies
 
 workflows:
   default:
