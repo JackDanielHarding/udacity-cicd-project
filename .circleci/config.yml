@@ -1,4 +1,7 @@
 version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3     
             
 jobs:
   build-frontend:
@@ -87,6 +90,41 @@ jobs:
           working_directory: ./backend
           command: npm audit --audit-level=none # I had to remove the --audit-level=critical flag because when running the npm audit fix --audit-level=critical --force from the instructions, it introduces a breaking change to one of the dependencies
 
+  deploy-infrastructure:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/setup:
+          profile-name: admin
+      - checkout
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udacity-cicd-project \
+              --stack-name udacity-cicd-backend-$CIRCLE_WORKFLOW_ID \
+              --parameter-overrides ID=$CIRCLE_WORKFLOW_ID
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml \
+              --tags project=udacity-cicd-project \
+              --stack-name udacity-cicd-frontend-$CIRCLE_WORKFLOW_ID \
+              --parameter-overrides ID=$CIRCLE_WORKFLOW_ID
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udacity-cicd-project" \
+              --output text >> .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      # Here's where you will add some code to rollback on failure  
+
 workflows:
   default:
     jobs:
@@ -100,3 +138,9 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: 
+                - main
