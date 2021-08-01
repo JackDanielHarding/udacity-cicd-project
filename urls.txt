@@ -1,1 +1,2 @@
 URL1 - GitHub Repo - https://github.com/JackDanielHarding/udacity-cicd-project
+URL2 - S3 Bucket Public URL - http://udapeople-79daa761-21e4-427d-9bda-330b1dd15ddd.s3-website-us-west-2.amazonaws.com/

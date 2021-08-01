@@ -118,7 +118,12 @@ jobs:
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udacity-cicd-project" \
-              --output text >> .circleci/ansible/inventory.txt
+              --output text >> temp.txt
+      - run:
+          name: Store IP address for future ise
+          command: |
+            cat temp.txt >> .circleci/ansible/inventory.txt
+            curl -H "Content-Type: text/plain" -H "token: dbaf9a52-741b-439d-917f-ec5c4a7702bc" --request PUT --data $(cat temp.txt) https://api.memstash.io/values/backend_ip_$CIRCLE_WORKFLOW_ID
       - persist_to_workspace:
           root: ~/
           paths:
@@ -167,6 +172,31 @@ jobs:
             
      # Here's where you will add some code to rollback on failure      
 
+  deploy-frontend:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/setup:
+          profile-name: admin
+      - checkout 
+      - run: 
+          name: Install dependencies
+          working_directory: ./frontend
+          command: npm i
+      - run:
+          name: Rebuild with backen URL
+          working_directory: ./frontend
+          command: |
+            export BACKEND_IP=$(curl -H "token: dbaf9a52-741b-439d-917f-ec5c4a7702bc" --request GET https://api.memstash.io/values/backend_ip_$CIRCLE_WORKFLOW_ID)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            npm run build
+      - run:
+          name: Deploy frontend objects
+          working_directory: ./frontend
+          command: |
+            aws s3 cp ./dist s3://udapeople-$CIRCLE_WORKFLOW_ID --recursive
+      # Here's where you will add some code to rollback on failure    
+
 workflows:
   default:
     jobs:
@@ -190,3 +220,5 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
