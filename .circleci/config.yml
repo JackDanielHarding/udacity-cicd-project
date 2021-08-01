@@ -178,20 +178,18 @@ jobs:
       - aws-cli/setup:
           profile-name: admin
       - checkout 
-      - run:
-          name: Get backend url
-          command: |
-            export BACKEND_IP=$(curl -H "token: dbaf9a52-741b-439d-917f-ec5c4a7702bc" --request GET https://api.memstash.io/values/backend_ip_$CIRCLE_WORKFLOW_ID)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
       - run: 
           name: Install dependencies
           working_directory: ./frontend
           command: npm i
       - run:
-          name: Build front-end
-          command: npm run build
+          name: Rebuild with backen URL
           working_directory: ./frontend
+          command: |
+            export BACKEND_IP=$(curl -H "token: dbaf9a52-741b-439d-917f-ec5c4a7702bc" --request GET https://api.memstash.io/values/backend_ip_$CIRCLE_WORKFLOW_ID)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            npm run build
       - run:
           name: Deploy frontend objects
           working_directory: ./frontend
