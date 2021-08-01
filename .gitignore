@@ -5,3 +5,9 @@ frontend/app/*
 frontend/assets/*
 
 backend/node_modules/*
+
+# Keys
+*.pem
+
+# Ansible
+*.retry
