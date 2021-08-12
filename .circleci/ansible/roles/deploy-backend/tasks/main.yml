@@ -1,0 +1,17 @@
+---
+- name: "Copy Backend Artifacts"
+  copy:
+    src: artifact.tar.gz
+    dest: /home/ubuntu
+
+- name: Extract artifact.tar.gz into user directory
+  unarchive:
+    src: /home/ubuntu/artifact.tar.gz
+    dest: /home/ubuntu
+    remote_src: yes
+
+- name: "Start Backend"
+  become: yes
+  shell: pm2 start npm -- run start
+  args: 
+    chdir: /home/ubuntu
