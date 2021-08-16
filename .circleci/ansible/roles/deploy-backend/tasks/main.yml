@@ -10,8 +10,32 @@
     dest: /home/ubuntu
     remote_src: yes
 
-- name: "Start Backend"
+- name: "install dependencies"
   become: yes
+  shell: npm i 
+  args: 
+    chdir: /home/ubuntu
+
+- name: "build backend"
+  become: yes
+  shell: npm run build
+  args: 
+    chdir: /home/ubuntu
+
+- name: "add environment variables"
+  shell: |
+    echo ENVIRONMENT=$ENVIRONMENT >> .env
+    echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> .env
+    echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> .env
+    echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
+    echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
+    echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
+    echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
+    echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
+  args: 
+    chdir: /home/ubuntu
+
+- name: "Start Backend"
   shell: pm2 start npm -- run start
   args: 
     chdir: /home/ubuntu
